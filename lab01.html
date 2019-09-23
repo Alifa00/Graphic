@@ -1,0 +1,32 @@
+<HTML>
+<BODY>
+<canvas id='lab01' width='400' height='300' style="border:1px solid">
+</canvas>
+<script>
+	var canvas = document.getElementById('lab01');
+	var ctx = canvas.getContext('2d');
+	var i = 0;
+	var direction = 1;
+	document.addEventListener("keydown", function(event) {
+			if (event.code == "ArrowRight") {
+				direction = 1;
+			} else if (event.code == "ArrowLeft") {
+				direction = -1;
+			}
+		});
+		w = canvas.width;
+	setInterval( function () {
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			ctx.fillStyle = "#ff7800";
+			ctx.fillRect(50+i, 50, 100, 100);
+			i += direction;
+			if (150+i == w) {
+				direction = -1;
+			}
+			if (i == -50) {
+				direction = 1;
+			}
+		}, 10);
+</script>
+</BODY>
+</HTML>
