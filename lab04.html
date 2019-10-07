@@ -1,0 +1,76 @@
+<HTML>
+<BODY>
+    <canvas id='first' width='1000' height='1000' style="border:1px solid"></canvas>
+    <canvas id="second" width='1000' height='1000' style="border:1px solid" />
+    <script>
+        var canvasscr = document.getElementById('first');
+        var canvasdist = document.getElementById('second');
+        var ctxscr = canvasscr.getContext('2d');
+        var ctxdist = canvasdist.getContext('2d');
+        var img = new Image();
+
+        img.setAttribute('crossOrigin', 'anonymous');
+
+        img.onload = function () {
+            var gradTabley = [[-1, -2, -1], [0, 0, 0], [1, 2, 1]];
+            var gradTablex = [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]];
+            ctxscr.drawImage(img, 0, 0);
+            var idatascr = ctxscr.getImageData(0, 0, canvasscr.width, canvasscr.height);
+            var height = canvasscr.height;
+            var width = canvasscr.width;
+            var idatadist = ctxdist.createImageData(width, height);
+            for (var i=1; i < width - 1;i++){
+                for (var j=1; j < height - 1;j++){
+                    var ry=0;
+                    var gy=0;
+                    var by=0;
+                    var rx = 0;
+                    var gx = 0;
+                    var bx = 0;
+                    var r= 0;
+                    var g = 0;
+                    var b = 0;
+                    for (var ir=0; ir < 3;ir++){
+                        for (var  jr=0; jr < 3;jr++){
+                            ry += gradTabley[ir][jr]*idatascr.data[(width * (j + jr-1) + i + ir-1) * 4];
+                            gy += gradTabley[ir][jr] *idatascr.data[(width * (j + jr-1) + i + ir-1) * 4 + 1];
+                            by += gradTabley[ir][jr] *idatascr.data[(width * (j + jr-1) + i + ir-1) * 4 + 2];
+
+                        }
+                    }
+                    for (var ir = 0; ir < 3; ir++) {
+                        for (var jr = 0; jr < 3; jr++) {
+                            rx += gradTablex[ir][jr] * idatascr.data[(width * (j + jr - 1) + i + ir - 1) * 4];
+                            gx += gradTablex[ir][jr] * idatascr.data[(width * (j + jr - 1) + i + ir - 1) * 4 + 1];
+                            bx += gradTablex[ir][jr] * idatascr.data[(width * (j + jr - 1) + i + ir - 1) * 4 + 2];
+
+                        }
+                    }
+                    r = Math.sqrt(ry * ry + rx * rx);
+                    g = Math.sqrt(gy * gy + gx * gx);
+                    b = Math.sqrt(by * by + bx * bx);
+
+                    r = r > 255 ? 255 : r;
+                    g = g > 255 ? 255 : g;
+                    b = b > 255 ? 255 : b;
+
+                    r = r < 0 ? 0 : r;
+                    g = g < 0 ? 0 : g;
+                    b = b < 0 ? 0 : b;
+
+                    idatadist.data[(j * width + i) * 4] = r;
+                    idatadist.data[(j * width + i) * 4 + 1] = g;
+                    idatadist.data[(j * width + i) * 4 + 2] = b;
+                    idatadist.data[(j * width + i) * 4 + 3] = idatascr.data[(j * width + i) * 4 + 3];
+
+                }
+            }
+
+            console.log(idatascr);
+            console.log(idatadist);
+            ctxdist.putImageData(idatadist,0,0);
+        }
+        img.src = "https://sun9-54.userapi.com/c852216/v852216158/1c3535/ItdwPKKuYy0.jpg";
+    </script>
+</BODY>
+</HTML>
