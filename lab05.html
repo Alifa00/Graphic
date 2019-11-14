@@ -1,0 +1,212 @@
+<HTML>
+<HEAD>
+
+</HEAD>
+<BODY>
+	<div class= "canvas">
+		<canvas id='canv' height='500' width='700' style='border:1px solid' />
+	</div>
+	<div class = "buttons">
+		<button type="button" id="firstButton" onclick="lineDrawFunction()">Line</button>  
+		<button type="button" id="secondButton" onclick="rectDrawFunction()">Rectangle</button> 
+		<button type="button" id="secondButton" onclick="drawFunction()">Draw</button>  		
+	</div>
+	<div>
+		<h1>Line - нарисовать линии</h1>
+		<h1>Rectangle - выбрать точки для многоульника</h1>
+		<h1>Draw и нажатие на экран - отсечение линий в рамках нарисованного многоугольника</h1>	
+	</div>
+<script>
+	var canvas = document.getElementById('canv');
+	var ctx = canvas.getContext('2d');
+	var pointsLine=[];
+	var pointsRect=[];
+	var countpointsLine = 0;
+	var countpointsRect = 0;
+	
+	function MouseCoords(canvas) {
+		return {
+			x: event.clientX - 3,
+			y: event.clientY - 3
+		};
+	}
+	
+    function drawLine(x1, y1, x2, y2) {
+     
+
+        var dx = 0;
+        var dy = 0;
+        var e = 0;
+        var e1 = 0;
+        var k = 0;
+        var dxor = 1;
+        var dyor = 1;
+        dx = x2 - x1;
+        dy = y2 - y1;
+        if (dy < 0) {
+            dyor = -1;
+        }
+        if (dx < 0) {
+            dxor = -1;
+        }
+        if (dy * dyor < dx * dxor) {
+            k = 2 * dy * dyor;
+            e1 = 2 * dx * dxor;
+            var y_ = 0;
+            for (var i = 0; i * dxor < dx * dxor; i += dxor) {
+                if (e >= dx) {
+                    y_ += dyor;
+                    e -= e1;
+                }
+                ctx.fillRect(x1 + i, y1 + y_, 1, 1);
+                e += k;
+            }
+        }
+        if (dy * dyor > dx * dxor) {
+            k = 2 * dx * dxor;
+            e1 = 2 * dy * dyor;
+            var y_ = 0;
+            for (var i = 0; i * dyor < dy * dyor; i += dyor) {
+                if (e >= dy) {
+                    y_ += dxor;
+                    e -= e1;
+                }
+                ctx.fillRect(x1 + y_, y1 + i, 1, 1);
+                e += k;
+            }
+
+
+
+        }
+    }
+
+        function vector__product(pt1, pt2) {
+            return pt1[0] * pt2[1] - pt2[0] * pt1[1];
+        }
+        function scalar(pt1, pt2) {
+            return pt1[0] * pt2[0] + pt1[1] * pt2[1];
+        }
+        function delta(pt1, pt2) {
+            return [pt2[0] - pt1[0], pt2[1] - pt1[1]];
+        }
+        function normal(pt1, pt2) {
+            return [pt2[1] - pt1[1], pt1[0] - pt2[0]];
+        }
+        function p_s(pt1, pt2, t) {
+            return [pt1[0] + t * (pt2[0] - pt1[0]), pt1[1] + t * (pt2[1] - pt1[1])];
+        }
+
+        function cyrus_beck() {
+            ctx.clearRect(0, 0, 1000, 1000);
+            var orient = orientation();
+            var tmppointsLine = [];
+            var tmpCount = 0;
+            console.log(orient);
+            for (var i = 0; i < pointsLine.length; i += 2) {
+                var t0 = 0, t1 = 1;
+                var flag = true;
+                for (var j = 0; j < pointsRect.length; j++) {
+                    var n;
+                    if (orient == 'anticlockwise') {
+                        if (j == pointsRect.length - 1) n = normal(pointsRect[0], pointsRect[j]);
+                        else n = normal(pointsRect[j + 1], pointsRect[j]);
+                    }
+                    else if (orient == 'clockwise') {
+                        if (j == pointsRect.length - 1) n = normal(pointsRect[j], pointsRect[0]);
+                        else n = normal(pointsRect[j], pointsRect[j + 1]);
+                    }
+                    else {
+                        alert('ERROR');
+                        return;
+                    }
+                    var pn = scalar(delta(pointsLine[i], pointsLine[i + 1]), n);
+                    var qn = scalar(delta(pointsRect[j], pointsLine[i]), n);
+                    if (pn != 0) {
+                        var t = -qn / pn;
+                        if (pn < 0) {
+                            if (t < t1) t1 = t;
+                        }
+                        else {
+                            if (t > t0) t0 = t;
+                        }
+                    }
+                    else if (qn < 0) flag = false;
+                }
+                if (t0 > t1) flag = false;
+                if (flag) {
+                    var tmppointsLine1, tmppointsLine2;
+                    tmppointsLine1 = p_s(pointsLine[i], pointsLine[i + 1], t0);
+                    tmppointsLine2 = p_s(pointsLine[i], pointsLine[i + 1], t1);
+                    tmppointsLine.push([parseInt(tmppointsLine1[0]), parseInt(tmppointsLine1[1])]);
+                    tmppointsLine.push([parseInt(tmppointsLine2[0]), parseInt(tmppointsLine2[1])]);
+                    drawLine(parseInt(tmppointsLine1[0]), parseInt(tmppointsLine1[1]), parseInt(tmppointsLine2[0]), parseInt(tmppointsLine2[1]));
+                }
+            }
+
+            for (var j = 0; j < pointsRect.length - 1; j++) {
+                drawLine(pointsRect[j][0], pointsRect[j][1], pointsRect[j + 1][0], pointsRect[j + 1][1]);
+            }
+            drawLine(pointsRect[0][0], pointsRect[0][1], pointsRect[pointsRect.length - 1][0], pointsRect[pointsRect.length - 1][1]);
+            pointsLine = [];
+            pointsLine = tmppointsLine;
+            console.log(pointsLine);
+            tmppointsLine = [];
+            pointsRect = [];
+        }
+        function orientation() {
+            var product = [],
+                count = 0;
+            for (let i = 0; i < pointsRect.length - 2; i++) {
+                product.push(vector__product(delta(pointsRect[i], pointsRect[i + 1]), delta(pointsRect[i], pointsRect[i + 2])));
+            }
+            product.push(vector__product(delta(pointsRect[pointsRect.length - 2], pointsRect[pointsRect.length - 1]), delta(pointsRect[pointsRect.length - 2], pointsRect[0])));
+            product.push(vector__product(delta(pointsRect[pointsRect.length - 1], pointsRect[0]), delta(pointsRect[pointsRect.length - 1], pointsRect[1])));
+            for (let j = 0; j < product.length; j++) {
+                if (product[j] < 0) count--;
+                else if (product[j] > 0) count++;
+            }
+            if (count == product.length) return 'anticlockwise';
+            else if (count == -product.length) return 'clockwise';
+            else return 'error';
+        }
+
+        var lineListener = function (event) {
+            var mousePos = MouseCoords(canvas);
+            pointsLine.push([mousePos.x, mousePos.y]);
+            console.log(pointsLine);
+            if (pointsLine.length % 2 == 0) {
+                drawLine(pointsLine[countpointsLine][0], pointsLine[countpointsLine][1], pointsLine[countpointsLine + 1][0], pointsLine[countpointsLine + 1][1]);
+                countpointsLine += 2;
+                console.log(pointsLine);
+            }
+        }
+
+        var rectListener = function (event) {
+            var mousePos = MouseCoords(canvas);
+            pointsRect.push([mousePos.x, mousePos.y]);
+        }
+        var drawListener = function (event) {
+            cyrus_beck();
+        }
+
+
+        function lineDrawFunction() {
+            canvas.removeEventListener('click', rectListener, false);
+            canvas.removeEventListener('click', drawListener, false);
+            canvas.addEventListener('click', lineListener, false);
+        }
+
+        function rectDrawFunction() {
+            canvas.removeEventListener('click', lineListener, false);
+            canvas.removeEventListener('click', drawListener, false);
+            canvas.addEventListener('click', rectListener, false);
+        }
+        function drawFunction() {
+            canvas.removeEventListener('click', lineListener, false);
+            canvas.removeEventListener('click', rectListener, false);
+            canvas.addEventListener('click', drawListener, false);
+        }
+    
+</script> 
+</BODY> 
+</HTML>
