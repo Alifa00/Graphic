@@ -28,6 +28,18 @@ class STable:
         self.c=self.copyList(newC)
         self.A=self.copyTable(newTable)
         self.init_table()
+    def copyTable(self,_Table, minus=False):
+       result=[]
+       result_line=[]
+       for i in range(len(_Table)):
+            for j in range(len(_Table[0])):
+                if not minus:
+                   result_line.append(_Table[i][j])
+                else:
+                    result_line.append(-_Table[i][j])
+            result.append(result_line)
+            result_line=[]
+       return result        
     def __init__(self):
         self.c=[]
         self.b=[]
@@ -37,6 +49,26 @@ class STable:
         self.column_names=[]
         self.raw_names=[]
         self.orientation=True
+    def copyList(self, _list, minus=False):
+        result=[]
+        for i in range(len(_list)):
+            if not minus:
+               result.append(_list[i])
+            else:
+               result.append(-_list[i])
+        return result
+    def transpon(self,_Table,minus=False):
+       result=[]
+       result_line=[]
+       for i in range(len(_Table[0])):
+            for j in range(len(_Table)):
+                if not minus:
+                   result_line.append(_Table[j][i])
+                else:
+                    result_line.append(-_Table[j][i])
+            result.append(result_line)
+            result_line=[]
+       return result    
     def init_from_file(self,f,dvoy=False):
         dir_line_no_split=f.readline()
         while(dir_line_no_split=='\n'):
@@ -67,39 +99,7 @@ class STable:
             temp=self.copyTable(self.A)
             self.A=self.transpon(temp,minus=True)
             self.orientation=not self.orientation
-        self.init_table()
-    def copyTable(self,_Table, minus=False):
-       result=[]
-       result_line=[]
-       for i in range(len(_Table)):
-            for j in range(len(_Table[0])):
-                if not minus:
-                   result_line.append(_Table[i][j])
-                else:
-                    result_line.append(-_Table[i][j])
-            result.append(result_line)
-            result_line=[]
-       return result
-    def copyList(self, _list, minus=False):
-        result=[]
-        for i in range(len(_list)):
-            if not minus:
-               result.append(_list[i])
-            else:
-               result.append(-_list[i])
-        return result
-    def transpon(self,_Table,minus=False):
-       result=[]
-       result_line=[]
-       for i in range(len(_Table[0])):
-            for j in range(len(_Table)):
-                if not minus:
-                   result_line.append(_Table[j][i])
-                else:
-                    result_line.append(-_Table[j][i])
-            result.append(result_line)
-            result_line=[]
-       return result
+        self.init_table()    
     def printTable(self):
         print("      |",end="");
         for i in self.column_names:
@@ -134,6 +134,17 @@ class STable:
         self.raw_names[r]=self.column_names[k]
         self.column_names[k]=tmp
         self.Table=self.copyTable(newTable)
+    def gomori_method(self,notInteger):
+        raw_ind=0
+        for h in range(len(self.raw_names)-1):
+            if notInteger==self.raw_names[h]:
+                  raw_ind=h
+        newLine=[]
+        for i in range(len(self.column_names)):
+            newLine.append(-(self.Table[raw_ind][i]-floor(self.Table[raw_ind][i])))
+        self.Table.insert(len(self.raw_names)-1,newLine)
+       
+        self.raw_names.insert(len(self.raw_names)-1,"x"+str(len(self.raw_names)+len(self.column_names)-1))        
     def isOpornoe(self):
         for i in range(len(self.Table)-1):
             if(self.Table[i][0]<0): 
@@ -222,25 +233,11 @@ class STable:
           if(getIntegerIndex(self.column_names[h])<=len(self.c)):
                print(self.column_names[h],"=0",end=" ")
         print("")
-    def gomori_method(self,notInteger):
-        raw_ind=0
-        for h in range(len(self.raw_names)-1):
-            if notInteger==self.raw_names[h]:
-                  raw_ind=h
-        newLine=[]
-        for i in range(len(self.column_names)):
-            newLine.append(-(self.Table[raw_ind][i]-floor(self.Table[raw_ind][i])))
-        self.Table.insert(len(self.raw_names)-1,newLine)
-       
-        self.raw_names.insert(len(self.raw_names)-1,"x"+str(len(self.raw_names)+len(self.column_names)-1))
-    
-        
 
-
-def getIntegerIndex(notInteger):
-    str_result=notInteger[1:]
-    result=int(str_result)
-    return result
+   def getIntegerIndex(notInteger):
+       str_result=notInteger[1:]
+       result=int(str_result)
+       return result
 
 f=open("input.txt",'r')
 ST=STable()
