@@ -1,6 +1,6 @@
-from math import floor 
+from math import floor
 class STable:
-    def init_table(self):
+    def init_table(self,variable_symbole="x",function_symbole="F"):
         self.Table=self.copyTable(self.A)
         self.column_names=[]
         self.raw_names=[]
@@ -12,11 +12,11 @@ class STable:
             self.Table[i].insert(0,self.b[i])
         self.column_names=["S0"]
         for i in range(len(self.c)):
-            self.column_names.append("x"+str(i+1))
+            self.column_names.append(variable_symbole+str(i+1))
         for i in range(len(self.b)):
-            self.raw_names.append("x"+str(len(self.c)+i+1))
-        self.raw_names.append("F")
-        print("F=",end="")
+            self.raw_names.append(variable_symbole+str(len(self.c)+i+1))
+        self.raw_names.append(function_symbole)
+        print(function_symbole,"=",end="")
         for i in range(len(self.c)):
              print(self.c[i],"*",self.column_names[i+1],"+",end="",sep="")
         print("0",end='');
@@ -28,18 +28,6 @@ class STable:
         self.c=self.copyList(newC)
         self.A=self.copyTable(newTable)
         self.init_table()
-    def copyTable(self,_Table, minus=False):
-       result=[]
-       result_line=[]
-       for i in range(len(_Table)):
-            for j in range(len(_Table[0])):
-                if not minus:
-                   result_line.append(_Table[i][j])
-                else:
-                    result_line.append(-_Table[i][j])
-            result.append(result_line)
-            result_line=[]
-       return result        
     def __init__(self):
         self.c=[]
         self.b=[]
@@ -48,27 +36,49 @@ class STable:
         self.A=[]
         self.column_names=[]
         self.raw_names=[]
+        self.game_table=[]
         self.orientation=True
-    def copyList(self, _list, minus=False):
-        result=[]
-        for i in range(len(_list)):
-            if not minus:
-               result.append(_list[i])
-            else:
-               result.append(-_list[i])
-        return result
+    def create_player_table(self,number):
+        self.b=[]
+        self.c=[]
+        if number==1:
+           self.A=self.transpon(self.game_table,minus=True)
+           for i in range(len(self.game_table[0])):
+               self.b.append(-1)
+           for i in range(len(self.game_table)):
+               self.c.append(1)
+           self.orientation=True
+           self.init_table(variable_symbole="u",function_symbole="W")
+        if number==2:
+           self.A=self.copyTable(self.game_table)
+           for i in range(len(self.game_table)):
+               self.b.append(1)
+           for i in range(len(self.game_table[0])):
+               self.c.append(1)
+           self.orientation=False
+           self.init_table(variable_symbole="v",function_symbole="Z")        
+    def init_from_file_game(self,f):
+        dim_line_no_split=f.readline()
+        while(dim_line_no_split=='\n'):
+                dim_line_no_split=f.readline()
+        dim_line=dim_line_no_split.split()
+        for i in range(int(dim_line[0])):
+            line=f.readline()
+            while(line=='\n'):
+                line=f.readline()
+            self.game_table.append([float(x) for x in line.split()])
     def transpon(self,_Table,minus=False):
-       result=[]
-       result_line=[]
-       for i in range(len(_Table[0])):
-            for j in range(len(_Table)):
-                if not minus:
-                   result_line.append(_Table[j][i])
-                else:
-                    result_line.append(-_Table[j][i])
-            result.append(result_line)
-            result_line=[]
-       return result    
+        result=[]
+        result_line=[]
+        for i in range(len(_Table[0])):
+             for j in range(len(_Table)):
+                 if not minus:
+                    result_line.append(_Table[j][i])
+                 else:
+                     result_line.append(-_Table[j][i])
+             result.append(result_line)
+             result_line=[]
+        return result
     def init_from_file(self,f,dvoy=False):
         dir_line_no_split=f.readline()
         while(dir_line_no_split=='\n'):
@@ -91,7 +101,6 @@ class STable:
             while(line=='\n'):
                 line=f.readline()
             self.A.append([float(x) for x in line.split()])
-        
         if dvoy:        
             temp=self.copyList(self.b)
             self.b=self.copyList(self.c,minus=True)
@@ -99,7 +108,15 @@ class STable:
             temp=self.copyTable(self.A)
             self.A=self.transpon(temp,minus=True)
             self.orientation=not self.orientation
-        self.init_table()    
+        self.init_table()
+    def copyList(self, _list, minus=False):
+        result=[]
+        for i in range(len(_list)):
+            if not minus:
+               result.append(_list[i])
+            else:
+               result.append(-_list[i])
+        return result
     def printTable(self):
         print("      |",end="");
         for i in self.column_names:
@@ -117,34 +134,38 @@ class STable:
             print("")
             for i in range(len(self.column_names)+1):
                 print("%-6s"%"------"+"|",end="")
-            print("")  
+            print("")
+    def copyTable(self,_Table, minus=False):
+       result=[]
+       result_line=[]
+       for i in range(len(_Table)):
+            for j in range(len(_Table[0])):
+                if not minus:
+                   result_line.append(_Table[i][j])
+                else:
+                    result_line.append(-_Table[i][j])
+            result.append(result_line)
+            result_line=[]
+       return result            
     def jardan(self,r,k):
         newTable=self.copyTable(self.Table)
         srk=self.Table[r][k]
         for i in range(len(self.raw_names)):
             for j in range(len(self.column_names)):
                 newTable[i][j]=self.Table[i][j]-self.Table[i][k]*self.Table[r][j]/srk
+                
         for j in range(len(self.column_names)):
             newTable[r][j]=self.Table[r][j]/srk
+            
         for j in range(len(self.raw_names)):
             newTable[j][k]=-self.Table[j][k]/srk
+            
         newTable[r][k]=1/srk
         
         tmp=self.raw_names[r]
         self.raw_names[r]=self.column_names[k]
         self.column_names[k]=tmp
         self.Table=self.copyTable(newTable)
-    def gomori_method(self,notInteger):
-        raw_ind=0
-        for h in range(len(self.raw_names)-1):
-            if notInteger==self.raw_names[h]:
-                  raw_ind=h
-        newLine=[]
-        for i in range(len(self.column_names)):
-            newLine.append(-(self.Table[raw_ind][i]-floor(self.Table[raw_ind][i])))
-        self.Table.insert(len(self.raw_names)-1,newLine)
-       
-        self.raw_names.insert(len(self.raw_names)-1,"x"+str(len(self.raw_names)+len(self.column_names)-1))        
     def isOpornoe(self):
         for i in range(len(self.Table)-1):
             if(self.Table[i][0]<0): 
@@ -205,7 +226,7 @@ class STable:
         self.printTable()
         print("Найдено оптимальное решение")
         result=self.Table[len(self.Table)-1][0]if self.orientation else -self.Table[len(self.Table)-1][0]
-        print("F=",round(result,7))
+        print(self.raw_names[len(self.raw_names)-1],"=",round(result,4))
         isInteger=True
         notInteger=0
         LineNum=0
@@ -216,7 +237,7 @@ class STable:
                   isInteger=False
                   notInteger=self.raw_names[h]
                   Value=round(self.Table[h][0],7)
-               print(self.raw_names[h],"=",round(self.Table[h][0],7),end=" ")
+               print(self.raw_names[h],"=",round(self.Table[h][0],4),end=" ")
         for h in range(1,len(self.column_names),1):
           if(getIntegerIndex(self.column_names[h])<=len(self.c)):
                print(self.column_names[h],"=0",end=" ")
@@ -225,27 +246,27 @@ class STable:
     def printAnswer(self):
         print("Ответ:")
         result=self.Table[len(self.Table)-1][0]if self.orientation else -self.Table[len(self.Table)-1][0]
-        print("F=",round(result,13))
+        print(self.raw_names[len(self.raw_names)-1],"=",round(result,4))
+        print("g=",round((1/result),4))
         for h in range(len(self.raw_names)-1):
             if(getIntegerIndex(self.raw_names[h])<=len(self.c)):
-               print(self.raw_names[h],"=",round(self.Table[h][0],7),end=" ")
+               print(self.raw_names[h],"=",round(self.Table[h][0],4),end=" ")
         for h in range(1,len(self.column_names),1):
           if(getIntegerIndex(self.column_names[h])<=len(self.c)):
                print(self.column_names[h],"=0",end=" ")
         print("")
-
+        
    def getIntegerIndex(notInteger):
        str_result=notInteger[1:]
        result=int(str_result)
        return result
 
-f=open("input.txt",'r')
+f=open("input_lab5.txt",'r')
 ST=STable()
-ST.init_from_file(f)
-
-result,isInteger,notInteger,Value=ST.get_simpl_result()
-while not isInteger and result!=None:
-   ST.gomori_method(notInteger)
-   result,isInteger,notInteger,Value=ST.get_simpl_result()
+ST.init_from_file_game(f)
+ST.create_player_table(1)
+ST.get_simpl_result()
 ST.printAnswer()
-
+ST.create_player_table(2)
+ST.get_simpl_result()
+ST.printAnswer()
